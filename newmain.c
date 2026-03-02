@@ -1,45 +1,34 @@
 #include <xc.h>
 
-#define _XTAL_FREQ 8000000
-
-// CONFIG BITS for PIC16F877A
-#pragma config FOSC = HS        // External crystal (HS)
-#pragma config WDTE = OFF
-#pragma config PWRTE = OFF
-#pragma config BOREN = OFF
-#pragma config LVP = OFF
+// CONFIGURATION BITS
+#pragma config FOSC = INTRC_NOCLKOUT  // Internal oscillator
+#pragma config WDTE = OFF             // Watchdog Timer disabled
+#pragma config PWRTE = ON             // Power-up Timer enabled
+#pragma config MCLRE = ON             // MCLR pin enabled
+#pragma config CP = OFF               // Code Protection off
 #pragma config CPD = OFF
-#pragma config WRT = OFF
-#pragma config CP = OFF
+#pragma config BOREN = ON
+#pragma config IESO = OFF
+#pragma config FCMEN = OFF
+#pragma config LVP = OFF
 
-// Interrupt Service Routine
-void __interrupt() magic(void)
+#define _XTAL_FREQ 8000000   // 8MHz internal oscillator
+
+void main()
 {
-    if (INTCONbits.TMR0IF)      // Timer0 overflow?
-    {
-        PORTBbits.RB0 ^= 1;    // Toggle LED
-        TMR0 = 158;            // Reload Timer0
-        INTCONbits.TMR0IF = 0; // Clear flag
-    }
-}
+    // Set internal oscillator to 8MHz
+    OSCCON = 0x70;  
 
-void main(void)
-{
-    // PORTB setup
-    TRISBbits.TRISB0 = 0;      // RB0 as output
-    PORTBbits.RB0 = 0;         // LED OFF initially
-
-    // Timer0 setup
-    OPTION_REG = 0b00000111;   // Prescaler 1:256, internal clock
-    TMR0 = 158;                // Preload value
-
-    // Enable interrupts
-    INTCONbits.TMR0IE = 1;     // Timer0 interrupt enable
-    INTCONbits.GIE = 1;        // Global interrupt enable
+    TRISA0 = 0;     // Set RA0 as output
+    ANSEL = 0x00;   // Disable analog inputs
+    ANSELH = 0x00;
 
     while(1)
     {
-        // Main loop empty
-        // LED blinking handled by interrupt
+        RA0 = 1;    // LED ON
+        __delay_ms(500);
+
+        RA0 = 0;    // LED OFF
+        __delay_ms(500);
     }
 }
